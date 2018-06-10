@@ -1,0 +1,94 @@
+# defaults to datastore1 (the usual default on ESXi)
+var_target_datastore: "datastore1"
+
+# defaults to 'thin' provisioned on ESXi (others include 'zeroedthick' and
+# 'eagerzeroedthick'), defaults to 'qcow2' for qemu
+var_disk_type: "thin"
+
+# defaults to virtio on qemu, only used on qemu
+var_vm_disk_interface: "virtio"
+
+# no defaults set for drives, LVM is assumed
+# the following example is a layout based on the CIS benchmark
+# a swap drive is included at the end (see note at EOF)
+var_drives:
+- drive: "0"
+  dev_id: sda
+  drive_size_in_mb: 6144
+  vg_name: vg_root
+  partitions:
+  - type: "boot"
+    fs: ext4
+    size_in_mb: 512
+  - type: "pv"
+    fs: xfs
+    mount_point: /
+    lv_name: root
+- drive: "1"
+  dev_id: sdb
+  drive_size_in_mb: 2048
+  vg_name: vg_home
+  partitions:
+  - type: "pv"
+    fs: xfs
+    mount_point: /home
+    lv_name: home
+    fs_options: rw,auto,nodev,suid,exec,nouser,async,relatime
+- drive: "2"
+  dev_id: sdc
+  drive_size_in_mb: 6144
+  vg_name: vg_var
+  partitions:
+  - type: "pv"
+    fs: xfs
+    mount_point: /var
+    lv_name: var
+    lv_part_size_in_mb: 2048
+    fs_options: rw,auto,nodev,nosuid,exec,nouser,async,relatime
+  - type: "pv"
+    fs: xfs
+    mount_point: /var/log
+    lv_name: log
+    lv_part_size_in_mb: 3072
+  - type: "pv"
+    fs: xfs
+    mount_point: /var/log/audit
+    lv_name: audit
+- drive: "3"
+  dev_id: sdd
+  drive_size_in_mb: 2048
+  vg_name: vg_tmp
+  partitions:
+  - type: "pv"
+    fs: xfs
+    mount_point: /tmp
+    lv_name: tmp
+    fs_options: rw,auto,nodev,nosuid,exec,nouser,async,relatime
+- drive: "4"
+  dev_id: sde
+  drive_size_in_mb: 4096
+  vg_name: vg_app
+  partitions:
+  - type: "pv"
+    fs: xfs
+    mount_point: /application
+    lv_name: application
+    lv_part_size_in_mb: 3072
+  - type: "pv"
+    fs: xfs
+    mount_point: /applog
+    lv_name: applog
+- drive: "5"
+  dev_id: sdf
+  drive_size_in_mb: "{{ var_mem_in_mb }}"
+  partitions:
+  - type: swap
+  
+# Note: as of packer 1.2.3 there is a bug that does not allow more than
+# 7 drives in ESXi due to developers not accounting for standard ESXi
+# behavior.  While ESXi can accomodate 60 vDrive devices, scsi bus 0:7,
+# 1:7, 2:7, and 3:7 reserved for the HBA probably due to support for older
+# operating systems.  Packer does not account for this and attempts to 
+# claim 0:7 on the eighth drive which causes VMware to fail to start the 
+# VM and the packer build to fail.  HashiCorp Support was notified and a 
+# fix may be in the works.

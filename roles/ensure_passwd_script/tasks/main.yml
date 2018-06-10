@@ -1,0 +1,8 @@
+- name: ensure password hash generation script
+  copy: 
+    src: passwd_hash.bash
+    dest: "{{ var_home_dir }}/{{ var_sandbox_dir }}/passwd_hash.bash"
+    owner: "{{ var_current_user }}"
+    group: "{{ var_current_user }}"
+    mode: 0700
+

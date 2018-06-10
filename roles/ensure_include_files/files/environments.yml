@@ -1,0 +1,21 @@
+var_environments:
+- label: production
+  description: customer-facing workloads
+  color: ""
+  visibility: "public"
+  comment: ""
+- label: staging
+  description: environment to validate changes
+  color: ""
+  visibility: "internal"
+  comment: ""
+- label: test
+  description: environment to test changes
+  color: ""
+  visibility: "internal"
+  comment: ""
+- label: development
+  description: environment to develop changes
+  color: ""
+  visibility: "local"
+  comment: ""

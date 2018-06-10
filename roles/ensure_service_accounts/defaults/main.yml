@@ -1,0 +1,3 @@
+# do not rotate these by default
+var_rotate_service_account_a_key: false
+var_rotate_service_account_b_key: false

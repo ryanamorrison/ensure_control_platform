@@ -1,0 +1,4 @@
+# defaults are as shown below
+# this file allows these values to be overridden
+var_packer_debug: false
+var_bootcommand_wait_in_minutes: 15

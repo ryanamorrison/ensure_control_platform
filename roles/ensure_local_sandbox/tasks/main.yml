@@ -1,0 +1,10 @@
+- name: set sandbox directory
+  file: 
+    path: "{{ var_home_dir }}/{{ var_sandbox_dir }}"
+    state: directory
+
+- name: ensure sandbox directory variable
+  lineinfile:
+    line: "var_sandbox_dir: {{ var_sandbox_dir }}"
+    path: "{{ var_home_dir }}/{{ var_repo_dir }}/inventories/{{ var_include_var_dir }}/local_environment.yml"
+    state: present

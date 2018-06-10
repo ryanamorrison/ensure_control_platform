@@ -1,0 +1,25 @@
+# add ip's or hostnames as appropriate
+[esxi_by_ip]
+
+
+[esxi_by_hostname]
+
+
+[qemu_by_ip]
+
+
+[qemu_by_hostname]
+
+
+[build_hosts:children]
+esxi_by_ip
+esxi_by_hostname
+qemu_by_ip
+qemu_by_hostname
+
+[build_vms]
+example_vm
+
+[environment:children]
+
+[rating:children]

@@ -1,0 +1,39 @@
+# no defaults defined for var_vm_os
+# valid 'name' attributes are "centos", "redhat", "fedora", "ubuntu"
+# major version is required for EL systems when building on ESXi
+var_vm_os:
+  name: "{{ var_iso_catalog["centos"].name }}"
+  type: "{{ var_iso_catalog["centos"].type }}"
+  version: "{{ var_iso_catalog["centos"].major_version }}"
+  iso_url: "{{ var_home_dir }}/{{ var_sandbox_dir }}/{{ var_iso_dir }}/{{ var_iso_catalog("centos").iso_url.split('/')[-1] }}"
+  iso_checksum: "{{ var_iso_catalog["centos"].checksum }}"
+  iso_checksum_type: "{{ var_iso_catalog["centos"].checksum_type }}"
+  
+# regional settings could be moved up to group_vars, defaults to a 'best guess' at the timezone 
+# if available, otherwise America/Los_Angeles if not specified
+var_timezone: America/Los_Angeles
+
+# defaults to 'best guess' based on local server setting, otherwise 'us' if not specified
+var_keyboard: us
+
+# defaults to local server lang setting
+var_lang: en_US.UTF-8
+
+# if a more restrictive (or less restrictive) setting is required, uncomment and change
+#var_set_umask_to: 027
+
+# disable SELINUX by default (mostly for the build), applies only to EL systems
+#var_disable_selinux: false
+
+# by default a random root password was generated as a default value, these should go in a 
+# VAULT FILE to override (in host_vars or group_vars)
+#var_default_root_passwd: my new root password
+#var_default_root_passwd_crypted: my new root password crypted
+
+# if building an EL system and it would be preferred to have a randomly generated root 
+# password like Ubuntu, set the following value to true.   
+var_generate_random_root_password: false
+
+# if using the above random password function and you would prefer not to have the random
+# root password saved to a vault file in host_vars then set the following to true
+var_keep_random_password: false

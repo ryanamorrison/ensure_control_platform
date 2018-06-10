@@ -1,0 +1,3 @@
+var_current_user: "{{ lookup('env','USER') }}"
+var_home_dir: "{{ lookup('env','HOME') }}"
+

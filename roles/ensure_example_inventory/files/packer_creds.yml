@@ -1,0 +1,4 @@
+var_packer_login: "{{ var_service_accounts[0].username }}"
+var_packer_pass: "{{ var_service_account_a_passwd }}"
+var_packer_hvisor_login: "{{ var_service_accounts[0].username }}"
+var_packer_hvisor_pass: "{{ var_service_account_a_passwd }}"

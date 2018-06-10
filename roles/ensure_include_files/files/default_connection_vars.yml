@@ -1,0 +1,8 @@
+# select a service account at random
+# note these vars (e.g. "var_pos") are used in other places, not just here
+- var_raw_count: "{{ var_service_accounts['service_acct'] | length }}"
+- var_array_num: "{{ var_raw_count - 1 }}" 
+- var_pos: "{{ var_array_num | random }}"
+- ansible_private_key: "{{ var_home_dir }}/.ssh/id_rsa_{{ var_service_accounts[var_pos].username }}"
+- ansible_become_pass: "{{ var_service_accounts[var_pos].passwd }}"
+- var_use_service_account: {{ var_service_accounts[var_pos].username }}

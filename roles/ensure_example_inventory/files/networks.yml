@@ -1,0 +1,15 @@
+# define your networks here by a name, the below network is named 'example' this name should 
+# match 'var_network_to_build_on' in host_vars for the VM
+var_networks:
+  example:
+    use_dhcp: false
+    disable_ipv6: true
+    ipv4_mask: 255.255.255.0
+    ipv4_gw: 192.168.200.1
+    vlan_id: 0
+    ipv4_dns_servers: [ "8.8.8.8", "4.2.2.1" ]
+    domainname: domain.tld
+    label: "VM Network"
+    environment: production
+    security_rating: trusted
+    comment: ""

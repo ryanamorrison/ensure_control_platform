@@ -1,0 +1,4 @@
+var_packer_log_dir: packer_log
+var_packer_archive_dir: packer_archive
+var_packer_template_dir: packer_templates
+var_packer_cache_dir: packer_cache

@@ -1,0 +1,7 @@
+- name: ssh-add private key
+  shell: ssh-add {{ var_home_dir }}/.ssh/id_rsa_{{ var_use_service_account }}
+  register: cmd_result
+  changed_when: "cmd_result.rc != 0"
+  # experimental, if this works as advertised there should be no need 
+  # to use a separate hosts statement
+  delegate_to: localhost

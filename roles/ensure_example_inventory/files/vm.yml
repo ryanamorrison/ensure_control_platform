@@ -1,0 +1,33 @@
+# defaults to ansible_hostname if not specified
+#var_build_image_name: a-different-hostname
+
+# defaults to a random build_host in inventory if not specified
+#var_target_buildhost: a-specific-hypervisor-hostname
+
+# packer shuts down VM's, use this to power the VM back on, defaults to false
+var_power_vm_back_on: false
+
+# defaults to 1
+var_num_vcpu: 1
+
+# defaults to 512MB
+var_mem_in_mb: 1024
+
+# defaults to v9 vHardware (only used on ESXi), set to v8 if 
+# still using the best client VMware has ever produced
+#var_vhardware_version: 9
+
+# name defined in group_vars/all/networks.yml
+var_network_to_build_on: example
+
+# ip should be defined if dhcp is not enabled (defined in group_vars/all/networks.yml)
+var_ipv4_addr: 192.168.1.4
+
+# defaults to e1000 on ESXi or virtio-net on qemu
+var_nic_type: e1000
+
+# defaults to true, only used in kickstart (enterprise linux) builds
+var_disable_selinux: true
+
+# defaults to false
+#var_enable_kdump: true

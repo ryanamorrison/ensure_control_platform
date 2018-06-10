@@ -1,0 +1,47 @@
+- name: ensure example inventory directory
+  file:
+    path: "{{ var_home_dir }}/{{ var_repo_dir }}/inventories/example"
+    state: directory
+    owner: "{{ var_current_user }}"
+    group: "{{ var_current_user }}"
+    mode: 0700
+    
+- name: ensure example inventory sub-directories
+  file:
+    path: "{{ var_home_dir }}/{{ var_repo_dir }}/inventories/example/{{ item }}"
+    state: directory
+    owner: "{{ var_current_user }}"
+    group: "{{ var_current_user }}"
+    mode: 0700
+  with_items:
+    - group_vars
+    - group_vars/all
+    - group_vars/build_vms
+    - group_vars/build_hosts
+    - group_vars/esxi_by_ip
+    - group_vars/esxi_by_hostname
+    - group_vars/qemu_by_ip
+    - group_vars/qemu_by_hostname
+    - host_vars
+    - host_vars/example_vm1
+    
+- name: ensure generated user-modified example inventory files
+  copy: 
+    src: "{{ item.file }}"
+    dest: "{{ var_home_dir }}/{{ var_repo_dir }}/inventories/example/{{ item.path }}"
+    owner: "{{ var_current_user }}"
+    group: "{{ var_current_user }}"
+    mode: 0600
+  with_items:
+  - {"file": "inventory", "path": "inventory" }
+  - {"file": "all.yml", "path": "group_vars/all/all.yml" }
+  - {"file": "networks.yml", "path": "group_vars/all/networks.yml" }
+  - {"file": "packer_creds.yml", "path": "group_vars/all/packer_creds.yml" }
+  - {"file": "hypervisors-all.yml", "path": "group_vars/build_hosts/all.yml" }
+  - {"file": "esxi_by_ip.yml", "path": "group_vars/esxi_by_ip/hypervisor.yml" }
+  - {"file": "esxi_by_hostname.yml", "path": "group_vars/esxi_by_hostname/hypervisor.yml" }
+  - {"file": "qemu_by_ip.yml", "path": "group_vars/qemu_by_ip/hypervisor.yml" }
+  - {"file": "qemu_by_hostname.yml", "path": "group_vars/qemu_by_hostname/hypervisor.yml" }
+  - {"file": "vm.yml", "path": "host_vars/example_vm1/hosts.yml" }
+  - {"file": "os.yml", "path": "host_vars/example_vm1/os.yml" }
+  - {"file": "storage.yml", "path": "host_vars/example_vm1/storage.yml" }

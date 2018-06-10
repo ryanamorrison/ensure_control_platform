@@ -1,0 +1,43 @@
+- name: ensure include directories
+  file:
+    path: "{{ var_home_dir }}/{{ var_repo_dir }}/inventories/{{ item }}"
+    state: directory
+    mode: 0750
+    owner: "{{ var_current_user }}"
+    group: "{{ var_current_user }}"
+  with_items:
+    - "{{ var_include_task_dir }}"
+    - "{{ var_include_var_dir }}"
+
+- name: ensure tasks include files
+  copy:
+    src: "{{ item }}"
+    dest: "{{ var_home_dir }}/{{ var_repo_dir }}/inventories/{{ var_include_task_dir }}/{{ item }}"
+    mode: 0640
+    owner: "{{ var_current_user }}"
+    group: "{{ var_current_user }}"
+  with_items:
+   - default_connection_tasks.yml 
+
+- name: ensure var include files
+  copy:
+    src: "{{ item }}"
+    dest: "{{ var_home_dir }}/{{ var_repo_dir }}/inventories/{{ var_include_var_dir }}/{{ item }}"
+    mode: 0640
+    owner: "{{ var_current_user }}"
+    group: "{{ var_current_user }}"
+  with_items:
+    - default_connection_vars.yml 
+    - local_environment.yml
+    - security.yml
+    - environments.yml
+    - globals.yml
+
+- name: ensure connection tasks include variable in all.yml (link them to inventories)
+  lineinfile:
+    path: "{{ var_home_dir }}/{{ var_repo_dir }}/inventories/local/group_vars/all/all.yml"
+    line: "{{ item }}"
+    state: present
+  with_items:
+    - "var_include_task_dir: {{ var_include_task_dir }}"
+    - "var_include_var_dir: {{ var_include_var_dir }}"

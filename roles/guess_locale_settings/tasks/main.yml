@@ -1,0 +1,28 @@
+# This attempts to 'guess' at the locale settings as it would
+# apply to a kickstart file.  The script makes a "best attempt"
+# but this isn't perfect.
+# source commandline pulled from Stack Overflow
+
+# still need to test on Ubu
+# this does not work on the linux shell on Win10
+
+- name: attempt to derive default timezone
+  shell: find /usr/share/zoneinfo/ -type f| xargs md5sum | grep $(md5sum /etc/localtime | cut -d' ' -f1) | grep posix | head -1 | awk -F"posix" '{ print $NF }'
+  register: cmd_result
+
+- name: add results as a setting
+  lineinfile: 
+    path: "{{ var_home_dir }}/{{ var_repo_dir }}/inventories/{{ var_include_var_dir }}/local_environment.yml"
+    line: "var_default_tz: {{ cmd_result.stdout }}"
+    state: present
+
+- name: attempt to derive default timezone
+  shell: localectl status | grep VC | awk -F":" '{ print $2 }' | xargs 
+  register: cmd_result
+
+- name: add results as a setting
+  lineinfile: 
+    path: "{{ var_home_dir }}/{{ var_repo_dir }}/inventories/{{ var_include_var_dir }}/local_environment.yml"
+    line: "var_default_kb: {{ cmd_result.stdout }}"
+    state: present
+

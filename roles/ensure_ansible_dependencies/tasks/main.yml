@@ -1,0 +1,56 @@
+- name: ensure ansible dependencies (yum)
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - python-paramiko
+    - python-pip
+    - python-dns
+    - unzip
+  when: ansible_os_family == "RedHat"
+  become: yes
+  become_method: sudo
+
+- name: ensure ansible dependencies (apt)
+  apt:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - python-paramiko
+    - python-pip
+    - python-dnspython
+    - unzip
+  when: ansible_os_family == "Debian"
+  become: yes
+  become_method: sudo
+
+- name: ensure pip is up-to-date
+  shell: pip install --upgrade pip
+  become: yes
+  become_method: sudo
+
+- name: ensure passlib is present
+  pip:
+    name: "{{ item }}"
+    state: present
+  become: yes
+  become_method: sudo
+  with_items:
+    - passlib
+    - cryptography
+
+- name: create ansible .retry junk directory
+  file: 
+    path: "{{ var_home_dir }}/{{ var_sandbox_dir }}/{{ var_ansible_retry_dir }}"
+    state: directory
+    owner: "{{ var_current_user }}"
+    group: "{{ var_current_user }}"
+    mode: 0750
+
+- name: redirect ansible .retry junk
+  lineinfile:
+    path: /etc/ansible/ansible.cfg
+    regexp: '^retry_files_save_path = '
+    line: "retry_files_save_path = {{ var_home_dir }}/{{ var_sandbox_dir }}/{{ var_ansible_retry_dir }}"
+  become: yes
+  become_method: sudo

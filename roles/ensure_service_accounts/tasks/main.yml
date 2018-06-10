@@ -1,0 +1,149 @@
+- name: check for existing vault file
+  stat:
+    path: "{{ var_home_dir }}/{{ var_repo_dir }}/inventories/{{ var_include_var_dir }}/service_account_vault.yml"
+  register: vault_file
+
+- name: generate a random password for service account A
+  shell: openssl rand -base64 48
+  register: random_passwd
+  when: vault_file.stat.exists == false
+
+- name: set variable for random password for service account A
+  set_fact:
+    var_service_account_a_passwd: random_passwd.stdout  
+    var_service_passwd_for_template: random_passwd.stdout 
+  when: vault_file.stat.exists == false
+
+- name: drop password file into sandbox
+  template:
+    src: my_pass.txt
+    dest: "{{ var_home_dir }}/{{ var_sandbox_dir }}/my_pass.txt"
+    owner: "{{ var_current_user }}"
+    group: "{{ var_current_user }}"
+    mode: 0700
+  when: vault_file.stat.exists == false
+
+- name: hash password for service account A
+  shell: "{{ var_home_dir }}/{{ var_sandbox_dir }}/passwd_hash.bash"
+  register: crypted_passwd
+  when: vault_file.stat.exists == false
+
+- name: set var for crypted password for service account A
+  set_fact:
+    var_service_account_a_hashed_passwd: crypted_passwd.stdout
+  when: vault_file.stat.exists == false
+
+- name: generate a random password for service account B
+  shell: openssl rand -base64 48
+  register: random_passwd
+  when: vault_file.stat.exists == false
+  
+- name: set variable for random password for service account B
+  set_fact:
+    var_service_account_b_passwd: random_passwd.stdout
+    var_service_passwd_for_template: random_passwd.stdout
+  when: vault_file.stat.exists == false
+
+- name: drop password file into sandbox
+  template:
+    src: my_pass.txt
+    dest: "{{ var_home_dir }}/{{ var_sandbox_dir }}/my_pass.txt"
+    owner: "{{ var_current_user }}"
+    group: "{{ var_current_user }}"
+    mode: 0700
+  when: vault_file.stat.exists == false
+
+- name: hash password for service account B 
+  shell: "{{ var_home_dir }}/{{ var_sandbox_dir }}/passwd_hash.bash"
+  register: crypted_passwd
+  when: vault_file.stat.exists == false
+
+- name: set var for crypted password for service account B
+  set_fact:
+    var_service_account_b_hashed_passwd: crypted_passwd.stdout
+  when: vault_file.stat.exists == false
+
+- name: generate a random password for the vault
+  shell: openssl rand -base64 48 > {{ var_home_dir }}/{{ var_repo_dir }}/.vpass.txt
+  when: vault_file.stat.exists == false
+
+- name: ensure vault pass file permissions
+  file:
+    path: "{{ var_home_dir }}/{{ var_repo_dir }}/.vpass.txt"
+    owner: "{{ var_current_user }}"
+    group: "{{ var_current_user }}"
+    mode: 0600
+  when: vault_file.stat.exists == false
+
+- name: check for existing ssh key for service account A, register result
+  stat:
+    path: "{{ var_home_dir }}/.ssh/id_rsa_{{ var_ansible_service_account_a_ID }}"
+  register: sshkeyA
+  become: no
+  when: vault_file.stat.exists == false
+
+- name: based on above check set a fact
+  set_fact:
+    var_rotate_service_account_a_key: true
+  when: sshkeyA.stat.exists == false and vault_file.stat.exists == false
+
+- name: check for existing ssh key for service account B, register the result
+  stat:
+    path: "{{ var_home_dir }}/.ssh/id_rsa_{{ var_ansible_service_account_b_ID }}"
+  register: sshkeyB
+  become: no
+  when: vault_file.stat.exists == false
+
+- name: based on above check set a fact
+  set_fact:
+    var_rotate_service_account_b_key: true
+  when: sshkeyB.stat.exists == false 
+
+- name: if there is no existing ssh key or a var to rotate the key is true then create a new key for service account A
+  shell: ssh-keygen -t rsa -f {{ var_home_dir }}/.ssh/id_rsa_{{ var_ansible_service_account_a_ID }} -C $(date '+%y%m%d') -N ""
+  when: var_rotate_service_account_a_key == true and vault_file.stat.exists == false
+  become: no
+
+- name: if there is no existing ssh key or a var to rotate the key is true then create a new key for service account B
+  shell: ssh-keygen -t rsa -f {{ var_home_dir }}/.ssh/id_rsa_{{ var_ansible_service_account_b_ID }} -C $(date '+%y%m%d') -N ""
+  when: var_rotate_service_account_b_key == true and vault_file.stat.exists == false
+  become: no
+
+- name: load ssh key for service account A
+  shell: cat {{ var_home_dir }}/.ssh/id_rsa_{{ var_ansible_service_account_a_ID }}
+  register: service_account_a_pub_key
+  when: vault_file.stat.exists == false
+  
+- name: set fact for ssh key for service account A
+  set_fact:
+    var_service_account_a_pub_key: service_account_a_pub_key.stdout
+  when: vault_file.stat.exists == false
+
+- name: load ssh key for service account B
+  shell: cat {{ var_home_dir }}/.ssh/id_rsa_{{ var_ansible_service_account_b_ID }}
+  register: service_account_b_pub_key  
+  when: vault_file.stat.exists == false
+
+- name: set fact for ssh key for service account B
+  set_fact:
+    var_service_account_b_pub_key: service_account_b_pub_key.stdout
+  when: vault_file.stat.exists == false
+
+- name: ensure an ansible-vault file
+  template:
+    src: service_account_vault
+    dest: "{{ var_home_dir }}/{{ var_repo_dir }}/inventories/{{ var_include_var_dir }}/service_account_vault.yml"
+    owner: "{{ var_current_user }}"
+    group: "{{ var_current_user }}"
+    mode: 0700
+  when: vault_file.stat.exists == false
+
+- name: ensure ansible-vault file in encrypted
+  shell: ansible-vault encrypt {{ var_home_dir }}/{{ var_repo_dir }}/inventories/{{ var_include_var_dir }}/service_account_vault.yml --vault-password-file={{ var_home_dir }}/{{ var_repo_dir }}/.vpass.txt
+  when: vault_file.stat.exists == false
+
+- name: ensure password file is removed
+  file:
+    path: "{{ var_home_dir }}/{{ var_sandbox_dir }}/my_pass.txt"
+    state: absent
+  when: vault_file.stat.exists == false

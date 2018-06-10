@@ -1,0 +1,18 @@
+# check to see if the initial prep script is somewhere and move it to repos if not
+- name: check to see if prep script is still present from where it was run
+  stat:
+    path: "{{ var_initial_script_dir }}/{{ var_initial_script }}"
+  register: script_present
+  
+- name: move prep script folder
+  shell: mv {{ var_initial_script_dir }} {{ var_home_dir }}/{{ var_repo_dir }}/
+  when: script_present.stat.exists == true and var_initial_script_dir.split('/')[-1] == "prep_auto_server"
+  
+- name: move prep script
+  shell: mv {{ var_initial_script_dir }}/{{ var_initial_script }} {{ var_home_dir }}/{{ var_repo_dir }}/prep_auto_server
+  when: script_present.stat.exists == true and var_initial_script_dir.split('/')[-1] != "prep_auto_server"
+
+- name: remove bootstrap script if downloaded from snippet/gist
+  file:
+    path: "{{ var_home_dir }}/bootstrap.bash"
+    state: absent

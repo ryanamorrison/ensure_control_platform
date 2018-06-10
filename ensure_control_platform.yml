@@ -1,0 +1,28 @@
+---
+- hosts: localhost
+  connection: local
+  vars:
+    - var_current_user: "{{ lookup('env','USER') }}"
+    - var_home_dir: "{{ lookup('env','HOME') }}"
+    - var_sandbox_dir: sandbox
+    - var_service_account_group: srvc-ansible
+    - var_service_account_gid: 2000
+    - var_ansible_service_account_basename: "{{ var_service_account_group }}" 
+    - var_ansible_service_account_a_ID: "{{ var_ansible_service_account_basename }}01" 
+    - var_ansible_service_account_b_ID: "{{ var_ansible_service_account_basename }}02"
+    - var_service_account_gecos_info: "ansible automation service account"
+    - var_packer_url: https://releases.hashicorp.com/packer/1.2.3/packer_1.2.3_linux_amd64.zip
+
+  roles:
+    - { role: ensure_ansible_dependencies }
+    - { role: ensure_include_files }
+    - { role: ensure_local_sandbox }
+    - { role: ensure_passwd_script }
+    - { role: ensure_iso_library }
+    - { role: ensure_service_accounts }
+    - { role: ensure_packer }
+    - { role: ensure_example_inventory }
+    - { role: ensure_default_root_creds }
+    - { role: ensure_git_repos }
+    - { role: guess_locale_settings }
+    - { role: clean_up_scripts }

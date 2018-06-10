@@ -1,0 +1,16 @@
+con_trust_rating:
+- label: trusted
+  description: this network is trusted
+  examples: corporate, management, infrastructure
+  comments: ""
+  trustworthiness_rating: 2
+- label: semi-trusted
+  description: this network is only semi-trusted
+  examples: perimeter, production
+  comments: ""
+  trustworthiness_rating: 1 
+- label: untrusted
+  description: this network is not trusted
+  examples: federation, border, vpn
+  comments: ""
+  trustworthiness_rating: 0 

@@ -1,0 +1,100 @@
+- name: pull down a 'list' repo (github)
+  get_url: 
+    url: "{{ var_git_source_server }}/{{ var_git_source_namespace }}/repo_list/archive/master.zip"
+    dest: "{{ var_home_dir }}/{{ var_sandbox_dir }}/repo_list.zip"
+  when: var_git_source_type == "github"
+
+- name: pull down a 'list' repo (gitlab)
+  get_url: 
+    url: "{{ var_git_source_server }}/{{ var_git_source_namespace }}/repo_list/repository/archive.tar.gz?ref=master"
+    dest: "{{ var_home_dir }}/{{ var_sandbox_dir }}/repo_list.tar.gz"
+  when: var_git_source_type == "gitlab"
+
+- name: unzip list repo (github)
+  unarchive:
+    src: "{{ var_home_dir }}/{{ var_sandbox_dir }}/repo_list.zip"
+    dest: "{{ var_home_dir }}/{{ var_repo_dir }}/"
+    owner: "{{ var_current_user }}"
+    group: "{{ var_current_user }}"
+    mode: 0750
+  when: var_git_source_type == "github"
+
+- name: unzip list repo (gitlab)
+  unarchive:
+    src: "{{ var_home_dir }}/{{ var_sandbox_dir }}/repo_list.tar.gz"
+    dest: "{{ var_home_dir }}/{{ var_repo_dir }}/"
+    owner: "{{ var_current_user }}"
+    group: "{{ var_current_user }}"
+    mode: 0750
+  when: var_git_source_type == "gitlab"
+
+- name: ensure the correct repo directory
+  shell: mv {{ var_home_dir }}/{{ var_repo_dir }}/repo_list-master* {{ var_home_dir }}/{{ var_repo_dir }}/repo_list
+
+- name: remove existing archive files
+  file:
+    path: "{{ var_home_dir }}/{{ var_sandbox_dir }}/{{ item }}"
+    state: absent
+  with_items:
+    - repo_list.zip  
+    - repo_list.tar.gz
+
+# need to remove anything existing before unarchiving
+# however there could be data in the repos so best to rename to .old or something
+
+- name: pull down additional repos from list (github)
+  get_url: 
+    url: "{{ var_git_source_server }}/{{ var_git_source_namespace }}/{{ item }}/archive/master.zip"
+    dest: "{{ var_home_dir }}/{{ var_sandbox_dir }}/{{ item }}.zip"
+  when: var_git_source_type == "github"
+  with_lines: cat "{{ var_home_dir }}/{{ var_repo_dir }}/repo_list/catalog.txt"
+
+- name: pull down additional repos from list (gitlab)
+  get_url: 
+    url: "{{ var_git_source_server }}/{{ var_git_source_namespace }}/{{ item }}/repository/archive.tar.gz?ref=master"
+    dest: "{{ var_home_dir }}/{{ var_sandbox_dir }}/{{ item }}.tar.gz"
+  when: var_git_source_type == "gitlab"
+  with_lines: cat  "{{ var_home_dir }}/{{ var_repo_dir }}/repo_list/catalog.txt"
+
+- name: unzip additional repos (github)
+  unarchive:
+    src: "{{ var_home_dir }}/{{ var_sandbox_dir }}/{{ item }}.zip"
+    dest: "{{ var_home_dir }}/{{ var_repo_dir }}/"
+    owner: "{{ var_current_user }}"
+    group: "{{ var_current_user }}"
+    mode: 0750
+  when: var_git_source_type == "github"
+  with_lines: cat "{{ var_home_dir }}/{{ var_repo_dir }}/repo_list/catalog.txt"
+
+- name: unzip additional repos (gitlab)
+  unarchive:
+    src: "{{ var_home_dir }}/{{ var_sandbox_dir }}/{{ item }}.tar.gz"
+    dest: "{{ var_home_dir }}/{{ var_repo_dir }}/"
+    owner: "{{ var_current_user }}"
+    group: "{{ var_current_user }}"
+    mode: 0750
+  when: var_git_source_type == "gitlab"
+  with_lines: cat "{{ var_home_dir }}/{{ var_repo_dir }}/repo_list/catalog.txt"
+
+- name: ensure the correct repo directory
+  shell: mv {{ var_home_dir }}/{{ var_repo_dir }}/{{ item }}-master* {{ var_home_dir }}/{{ var_repo_dir }}/{{ item }}
+  with_lines: cat "{{ var_home_dir }}/{{ var_repo_dir }}/repo_list/catalog.txt"
+
+- name: remove existing archive files (github)
+  file:
+    path: "{{ var_home_dir }}/{{ var_sandbox_dir }}/{{ item }}.zip"
+    state: absent
+  with_lines: cat "{{ var_home_dir }}/{{ var_repo_dir }}/repo_list/catalog.txt"
+  when: var_git_source_type == "github"
+
+- name: remove existing archive files (gitlab)
+  file:
+    path: "{{ var_home_dir }}/{{ var_sandbox_dir }}/{{ item }}.tar.gz"
+    state: absent
+  with_lines: cat "{{ var_home_dir }}/{{ var_repo_dir }}/repo_list/catalog.txt"
+  when: var_git_source_type == "gitlab"
+
+- name: ensure git variables
+  template:
+    src: git
+    dest: "{{ var_home_dir }}/{{ var_repo_dir }}/inventories/{{ var_include_var_dir }}/git.yml"

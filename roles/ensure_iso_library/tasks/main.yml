@@ -1,0 +1,29 @@
+- name: ensure local iso directory
+  file:
+    path: "{{ var_home_dir }}/{{ var_sandbox_dir }}/{{ var_iso_dir }}"
+    state: directory
+    owner: "{{ var_current_user }}"
+    group: "{{ var_current_user }}"
+    mode: 0700
+
+- name: ensure iso directory variable
+  lineinfile:
+    line: "var_iso_dir: {{ var_iso_dir }}"
+    path: "{{ var_home_dir }}/{{ var_repo_dir }}/inventories/local/group_vars/all/all.yml"
+    state: present
+
+- name: ensure iso library directory
+  file:
+    path: "{{ var_home_dir }}/{{ var_repo_dir }}/inventories/include_vars"
+    state: directory
+    owner: "{{ var_current_user }}"
+    group: "{{ var_current_user }}"
+    mode: 0700
+
+- name: ensure iso catalog file in local inventory
+  copy:
+    src: iso_catalog.yml
+    dest: "{{ var_home_dir }}/{{ var_repo_dir }}/inventories/include_vars/iso_catalog.yml"
+    owner: "{{ var_current_user }}"
+    group: "{{ var_current_user }}"
+    mode: 0600

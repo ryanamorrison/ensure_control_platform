@@ -1,0 +1,112 @@
+- name: ensure packer directories
+  file:
+    path: "{{ var_home_dir }}/{{ var_sandbox_dir }}/{{ item }}/"
+    state: directory
+  with_items:
+    - "{{ var_packer_log_dir }}"
+    - "{{ var_packer_archive_dir }}"
+    - "{{ var_packer_template_dir }}"
+    - "{{ var_packer_cache_dir }}"
+
+- name: ensure packer debug variables
+  copy:
+    src: packer_debug.yml
+    dest: "{{ var_home_dir }}/{{ var_repo_dir }}/inventories/{{ var_include_var_dir }}/packer_debug.yml" 
+    owner: "{{ var_current_user }}"
+    group: "{{ var_current_user }}"
+    mode: 0640
+
+- name: ensure packer directory variables
+  template: 
+    src: packer_vars.yml
+    dest: "{{ var_home_dir }}/{{ var_repo_dir }}/inventories/{{ var_include_var_dir }}/packer_vars.yml" 
+    owner: "{{ var_current_user }}"
+    group: "{{ var_current_user }}"
+    mode: 0640
+
+- name: ensure packer dependencies (EL)
+  yum:
+    name: sshpass
+    state: present
+  when: ansible_os_family == "RedHat"
+
+- name: ensure packer dependencies (ubuntu)
+  apt:
+    name: sshpass
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: parse url to get base name
+  shell: echo {{ var_packer_url }} | awk -F"/" '{print $NF}'
+  register: packer_zip
+
+- name: set archive file name
+  set_fact:
+    var_packer_zip: "{{ packer_zip.stdout }}" 
+
+- name: set archive file path
+  set_fact:
+    var_archive_fact_path: "{{ var_home_dir }}/{{ var_sandbox_dir }}/{{ var_packer_archive_dir }}/{{ var_packer_zip }}" 
+
+- name: check for existing zip file
+  stat:
+    path: "{{ var_archive_fact_path }}"
+  register: packer_zip_exists
+
+- name: download packer
+  get_url:
+    url: "{{ var_packer_url }}"
+    dest: "{{ var_archive_fact_path }}"
+  when: packer_zip_exists.stat.exists == false
+
+- name: get basename
+  set_fact:
+    var_packer_basename: "{{ var_packer_zip | regex_replace('.zip$','') }}"
+
+- name: make packer version directory
+  file:
+    path: "{{ var_home_dir }}/{{ var_sandbox_dir }}/{{ var_packer_basename }}"
+    state: directory 
+
+- name: ensure packer is unarchived
+  unarchive:
+    src: "{{ var_archive_fact_path }}" 
+    dest: "{{ var_home_dir }}/{{ var_sandbox_dir }}/{{ var_packer_basename }}"
+
+- name: ensure link to folder
+  file:
+    src: "{{ var_home_dir }}/{{ var_sandbox_dir }}/{{ var_packer_basename }}" 
+    dest: "{{ var_home_dir }}/{{ var_sandbox_dir }}/packer"
+    state: link
+
+- name: ensure link to binary (useful on EL systems)
+  file:
+    src: "{{ var_home_dir }}/{{ var_sandbox_dir }}/packer/packer" 
+    dest: "{{ var_home_dir }}/{{ var_sandbox_dir }}/packer/packer.io"
+    state: link
+
+- name: test packer binary by checking version
+  shell: "{{ var_home_dir }}/{{ var_sandbox_dir }}/packer/packer.io --version"
+  register: packer_version
+  changed_when: "packer_version.rc != 0"
+
+- name: ensure path and packerlog settings
+  lineinfile:
+    dest: "{{ var_home_dir }}/{{ var_local_profile_source }}"
+    line: "{{ item }}"
+    insertbefore: '^export PATH$'
+  with_items:
+    - "export PATH=$PATH:{{ var_home_dir }}/{{ var_sandbox_dir }}/packer"
+    - "export PACKER_LOG=1"
+    - "export PACKER_LOG_PATH={{ var_home_dir }}/{{ var_sandbox_dir }}/{{ var_packer_log_dir }}/packer.log"
+    - "export PACKER_CACHE_DIR={{ var_home_dir }}/{{ var_sandbox_dir }}/{{ var_packer_cache_dir }}/"
+    - "export PACKER_VERSION_NUM={{ packer_version.stdout }}"
+
+- name: export packer vars
+  shell: "{{ item }}" 
+  with_items:
+    - "export PATH=$PATH:{{ var_home_dir }}/{{ var_sandbox_dir }}/packer"
+    - "export PACKER_LOG=1"
+    - "export PACKER_LOG_PATH={{ var_home_dir }}/{{ var_sandbox_dir }}/{{ var_packer_log_dir }}/packer.log"
+    - "export PACKER_CACHE_DIR={{ var_home_dir }}/{{ var_sandbox_dir }}/{{ var_packer_cache_dir }}/"
+    - "export PACKER_VERSION_NUM=$({{ var_home_dir }}/{{ var_sandbox_dir }}/packer/packer.io --version)"

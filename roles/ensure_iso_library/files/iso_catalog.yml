@@ -1,0 +1,37 @@
+# fill in/expand the list of ISO URLs that ansible should 
+# download for packer to build from
+#
+var_iso_catalog:
+- name: centos
+  type: linux
+  major_version: 7
+  minor_version: 4
+  build_num: 1804
+  iso_url: http://mirror.datto.com/CentOS/7/isos/x86_64/CentOS-7-x86_64-Everything-1804.iso 
+  checksum: 99723c8b87dcec21df8aed23de1eb810346d42cfd2a3fafafe70a68296053417
+  checksum_type: sha256
+  comment: "old version"
+- name: fedora 
+  type: 
+  major_version: 
+  minor_version: 
+  build_num: 
+  iso_url:  
+  checksum: 
+  checksum_type:
+  comment:  
+- name: ubuntu
+  type: 
+  major_version: 
+  minor_version: 
+  build_num: 
+  iso_url:  
+  checksum: 
+  checksum_type: 
+  comment:
+
+# note: for CentOS/RedHat 7 'everything' DVD isos are required 
+# for vSphere if VM customization is going to be used.  vSphere
+# needs perl and net-tools installed in the OS to update vNIC 
+# settings such as the IP address. One or both of these packages
+# are not on the 'minimal' CD's as of this writing.

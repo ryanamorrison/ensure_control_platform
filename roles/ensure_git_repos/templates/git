@@ -1,0 +1,3 @@
+var_git_source_server: {{ var_git_source_server }}
+var_git_source_namespace: {{ var_git_source_namespace }}
+var_git_source_type: {{ var_git_source_type }}

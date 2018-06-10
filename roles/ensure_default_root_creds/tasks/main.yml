@@ -1,0 +1,53 @@
+- name: check for existing vault file
+  stat:
+    path: "{{ var_home_dir }}/{{ var_repo_dir }}/inventories/{{ var_include_task_dir }}/default_root_creds.yml"
+  register: vault_file
+
+- name: generate a random password for root 
+  shell: openssl rand -base64 48
+  register: random_passwd
+  when: vault_file.stat.exists == false
+
+- name: set variable for random password for root
+  set_fact:
+    var_def_root_pass: random_passwd.stdout  
+  when: vault_file.stat.exists == false
+
+- name: drop root password file into sandbox
+  template:
+    src: my_pass.txt
+    dest: "{{ var_home_dir }}/{{ var_sandbox_dir }}/my_pass.txt"
+    owner: "{{ var_current_user }}"
+    group: "{{ var_current_user }}"
+    mode: 0700
+  when: vault_file.stat.exists == false
+
+- name: hash password for root
+  shell: "{{ var_home_dir }}/{{ var_sandbox_dir }}/passwd_hash.bash"
+  register: crypted_passwd
+  when: vault_file.stat.exists == false
+
+- name: set var for crypted password for root
+  set_fact:
+    var_def_root_pass_crypted: crypted_passwd.stdout
+  when: vault_file.stat.exists == false
+
+- name: ensure an ansible-vault file
+  template:
+    src: default_root_creds
+    dest: "{{ var_home_dir }}/{{ var_repo_dir }}/inventories/{{ var_include_task_dir }}/default_root_creds.yml"
+    owner: "{{ var_current_user }}"
+    group: "{{ var_current_user }}"
+    mode: 0700
+  when: vault_file.stat.exists == false
+
+- name: ensure ansible-vault file in encrypted
+  shell: ansible-vault encrypt {{ var_home_dir }}/{{ var_repo_dir }}/inventories/{{ var_include_task_dir }}/default_root_creds.yml --vault-password-file={{ var_home_dir }}/{{ var_repo_dir }}/.vpass.txt
+  when: vault_file.stat.exists == false
+
+- name: ensure password file is removed
+  file:
+    path: "{{ var_home_dir }}/{{ var_sandbox_dir }}/my_pass.txt"
+    state: absent
+  when: vault_file.stat.exists == false
+
